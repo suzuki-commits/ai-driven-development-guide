@@ -1,0 +1,1358 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>AI駆動開発の要諦｜株式会社コミクス</title>
+    <meta
+      name="description"
+      content="Claude Code を使ったAI駆動開発の要諦・具体的な設定方法・注意点・実施事例をまとめたガイド。"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #221714;
+        --text: #333333;
+        --blue: #0068b6;
+        --blue-deep: #0057aa;
+        --verm: #fb4113;
+        --paper: #ffffff;
+        --panel: #f5f6f7;
+        --rule: #d1d3d7;
+        --mute: #b5b5b5;
+        --tint1: #edf5fb;
+        --tint2: #daeaf6;
+        --tint3: #c2dcf0;
+        --tint4: #a5cbe8;
+        --font-display:
+          "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", sans-serif;
+        --font-body: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+        --font-mono: "JetBrains Mono", Consolas, "Noto Sans JP", monospace;
+        color-scheme: light;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--text);
+        font-family: var(--font-body);
+        font-size: 18px;
+        line-height: 1.85;
+        -webkit-font-smoothing: antialiased;
+      }
+      a {
+        color: var(--blue);
+      }
+      a:hover {
+        color: var(--blue-deep);
+      }
+      :focus-visible {
+        outline: 3px solid var(--blue);
+        outline-offset: 3px;
+        border-radius: 4px;
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.9em;
+      }
+      :not(pre) > code {
+        background: var(--panel);
+        border: 1px solid var(--rule);
+        border-radius: 5px;
+        padding: 0.05em 0.4em;
+        color: var(--ink);
+        overflow-wrap: anywhere;
+      }
+
+      .wrap {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      /* ---- masthead ---- */
+      .masthead {
+        border-bottom: 1px solid var(--rule);
+      }
+      .masthead .wrap {
+        display: flex;
+        align-items: baseline;
+        gap: 16px;
+        padding-top: 14px;
+        padding-bottom: 14px;
+        font-size: 15px;
+        color: var(--ink);
+      }
+      .brand {
+        font-family: var(--font-display);
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        color: var(--blue);
+      }
+      .masthead .date {
+        margin-left: auto;
+      }
+
+      /* ---- hero ---- */
+      .hero {
+        padding: 72px 0 88px;
+      }
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+        gap: 56px;
+        align-items: center;
+      }
+      .eyebrow {
+        margin: 0 0 18px;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: var(--blue);
+      }
+      h1 {
+        margin: 0;
+        font-family: var(--font-display);
+        font-weight: 900;
+        font-size: clamp(42px, 6vw, 74px);
+        line-height: 1.18;
+        letter-spacing: 0.01em;
+        color: var(--ink);
+      }
+      h1 em {
+        font-style: normal;
+        color: var(--blue);
+      }
+      .lead {
+        margin: 28px 0 0;
+        font-size: 19px;
+        color: var(--ink);
+        max-width: 34em;
+      }
+      .toc {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 32px;
+      }
+      .toc a {
+        display: inline-block;
+        padding: 8px 18px;
+        border: 1.5px solid var(--blue);
+        border-radius: 999px;
+        font-size: 16px;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .toc a:hover {
+        background: var(--blue);
+        color: #fff;
+      }
+
+      .harness {
+        margin: 0;
+      }
+      .harness > svg {
+        display: block;
+        width: 100%;
+        max-width: 460px;
+        height: auto;
+        margin: 0 auto;
+      }
+      .ring-band {
+        transform-box: fill-box;
+        transform-origin: center;
+      }
+      .ring-label {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 20px;
+        fill: var(--ink);
+      }
+      .core-label {
+        font-family: var(--font-body);
+        font-weight: 700;
+        font-size: 15px;
+        fill: #fff;
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .ring-band {
+          animation: grow 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+        }
+        .ring-band.b3 {
+          animation-delay: 0.08s;
+        }
+        .ring-band.b2 {
+          animation-delay: 0.16s;
+        }
+        .ring-band.b1 {
+          animation-delay: 0.24s;
+        }
+        .ring-label {
+          animation: fade 0.6s ease both;
+          animation-delay: 0.7s;
+        }
+        @keyframes grow {
+          from {
+            transform: scale(0.82);
+            opacity: 0;
+          }
+          to {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
+        @keyframes fade {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+      }
+      .legend {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 6px 14px;
+        margin: 28px auto 0;
+        max-width: 460px;
+        font-size: 17px;
+      }
+      .legend dt {
+        font-weight: 700;
+        color: var(--ink);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+      }
+      .legend dd {
+        margin: 0;
+        color: var(--text);
+      }
+
+      /* ---- layer chips ---- */
+      .mini {
+        width: 22px;
+        height: 22px;
+        flex: none;
+      }
+      .layer {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--ink);
+      }
+      [data-layer="1"] {
+        --c1: var(--blue);
+        --w1: 2.6;
+      }
+      [data-layer="2"] {
+        --c2: var(--blue);
+        --w2: 2.6;
+      }
+      [data-layer="3"] {
+        --c3: var(--blue);
+        --w3: 2.6;
+      }
+      [data-layer="4"] {
+        --c4: var(--verm);
+        --w4: 2.6;
+      }
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 16px;
+        margin-bottom: 10px;
+      }
+
+      /* ---- sections ---- */
+      .section {
+        padding: 96px 0;
+      }
+      .section.alt {
+        background: var(--panel);
+      }
+      .section-head {
+        margin-bottom: 48px;
+        max-width: 46em;
+      }
+      h2 {
+        margin: 0;
+        font-family: var(--font-display);
+        font-weight: 900;
+        font-size: clamp(32px, 4vw, 46px);
+        line-height: 1.25;
+        color: var(--ink);
+      }
+      .section-lead {
+        margin: 16px 0 0;
+        color: var(--ink);
+      }
+      h3 {
+        margin: 0 0 10px;
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 24px;
+        line-height: 1.45;
+        color: var(--ink);
+      }
+
+      /* principles */
+      .principles {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0 56px;
+      }
+      .principle {
+        padding: 28px 0 32px;
+        border-top: 1px solid var(--rule);
+      }
+      .principle p {
+        margin: 0;
+      }
+
+      /* steps */
+      .steps {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .step {
+        display: grid;
+        grid-template-columns: 112px minmax(0, 1fr);
+        gap: 28px;
+        padding: 40px 0;
+        border-top: 1px solid var(--rule);
+      }
+      .step:first-child {
+        border-top: 0;
+        padding-top: 0;
+      }
+      .step-no {
+        font-family: var(--font-display);
+        font-weight: 900;
+        color: var(--blue);
+        font-size: 15px;
+        letter-spacing: 0.1em;
+        line-height: 1;
+      }
+      .step-no span {
+        display: block;
+        font-size: 64px;
+        letter-spacing: 0;
+        margin-top: 6px;
+      }
+      .step-body > p {
+        margin: 0 0 16px;
+      }
+      .step-body > p:last-child {
+        margin-bottom: 0;
+      }
+      .notes {
+        margin: 16px 0 0;
+        padding-left: 1.2em;
+      }
+      .notes li {
+        margin: 4px 0;
+      }
+
+      .code {
+        margin: 0 0 18px;
+        background: var(--ink);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .code figcaption {
+        padding: 10px 18px;
+        font-family: var(--font-mono);
+        font-size: 14px;
+        color: #e6e1de;
+        background: #332824;
+        border-bottom: 1px solid #45383340;
+      }
+      .code pre {
+        margin: 0;
+        padding: 18px 20px 20px;
+        overflow-x: auto;
+        font-family: var(--font-mono);
+        font-size: 16px;
+        line-height: 1.7;
+        color: #f5f6f7;
+        tab-size: 2;
+      }
+      .code pre code {
+        font-size: inherit;
+      }
+      .code .c {
+        color: #a5cbe8;
+      }
+
+      .ops {
+        margin: 0;
+        border-top: 1px solid var(--rule);
+      }
+      .op {
+        display: grid;
+        grid-template-columns: minmax(0, 15em) minmax(0, 1fr);
+        gap: 16px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--rule);
+      }
+      .op dt {
+        font-weight: 700;
+        color: var(--ink);
+      }
+      .op dd {
+        margin: 0;
+      }
+
+      /* pitfalls */
+      .pitfalls {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        max-width: 52em;
+      }
+      .pitfalls li {
+        position: relative;
+        padding: 22px 0 22px 34px;
+        border-top: 1px solid var(--rule);
+      }
+      .pitfalls li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 33px;
+        width: 14px;
+        height: 14px;
+        background: var(--verm);
+        border-radius: 3px;
+      }
+      .pitfalls strong {
+        display: block;
+        font-size: 20px;
+        color: var(--ink);
+        line-height: 1.6;
+      }
+      .pitfalls p {
+        margin: 6px 0 0;
+      }
+
+      /* cases */
+      .cases {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+      }
+      .case {
+        background: var(--paper);
+        border: 1px solid var(--rule);
+        border-radius: 14px;
+        padding: 28px 28px 30px;
+      }
+      .case dl {
+        margin: 6px 0 0;
+      }
+      .case dt {
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        color: var(--blue);
+        margin-top: 14px;
+      }
+      .case dd {
+        margin: 2px 0 0;
+      }
+      .case dd.learn {
+        border-left: 3px solid var(--blue);
+        padding-left: 14px;
+        color: var(--ink);
+        font-weight: 500;
+      }
+
+      /* colophon */
+      .colophon {
+        border-top: 1px solid var(--rule);
+        padding: 56px 0 72px;
+      }
+      .colophon .wrap {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+        gap: 40px;
+      }
+      .sig {
+        margin: 0;
+        color: var(--ink);
+        font-weight: 700;
+        line-height: 1.7;
+      }
+      .basis {
+        margin: 0;
+      }
+
+      @media (max-width: 900px) {
+        .hero {
+          padding: 48px 0 64px;
+        }
+        .hero-grid {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 44px;
+        }
+        .principles,
+        .cases {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .colophon .wrap {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 20px;
+        }
+      }
+      @media (max-width: 640px) {
+        .wrap {
+          padding: 0 18px;
+        }
+        .masthead .wrap {
+          flex-wrap: wrap;
+          gap: 4px 12px;
+        }
+        .masthead .date {
+          margin-left: 0;
+        }
+        .section {
+          padding: 64px 0;
+        }
+        .section-head {
+          margin-bottom: 32px;
+        }
+        .step {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 12px;
+          padding: 32px 0;
+        }
+        .step-no {
+          display: flex;
+          align-items: baseline;
+          gap: 8px;
+        }
+        .step-no span {
+          display: inline;
+          font-size: 40px;
+          margin-top: 0;
+        }
+        .op {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 2px;
+        }
+        .case {
+          padding: 22px 20px 24px;
+        }
+        .code pre {
+          font-size: 15px;
+          padding: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <svg
+      width="0"
+      height="0"
+      style="position: absolute"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <symbol id="mini" viewBox="0 0 24 24">
+        <circle
+          cx="12"
+          cy="12"
+          r="11"
+          fill="none"
+          style="stroke: var(--c4, #b5b5b5); stroke-width: var(--w4, 1.2)"
+        />
+        <circle
+          cx="12"
+          cy="12"
+          r="8.6"
+          fill="none"
+          style="stroke: var(--c3, #b5b5b5); stroke-width: var(--w3, 1.2)"
+        />
+        <circle
+          cx="12"
+          cy="12"
+          r="6.2"
+          fill="none"
+          style="stroke: var(--c2, #b5b5b5); stroke-width: var(--w2, 1.2)"
+        />
+        <circle
+          cx="12"
+          cy="12"
+          r="3.9"
+          fill="none"
+          style="stroke: var(--c1, #b5b5b5); stroke-width: var(--w1, 1.2)"
+        />
+        <circle cx="12" cy="12" r="1.7" fill="#221714" />
+      </symbol>
+    </svg>
+
+    <header class="masthead">
+      <div class="wrap">
+        <span class="brand">COMIX</span>
+        <span>AI駆動開発の要諦</span>
+        <span class="date">2026年10月版</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="wrap hero-grid">
+          <div class="hero-text">
+            <p class="eyebrow">AI駆動開発の要諦 ／ Claude Code 実践ガイド</p>
+            <h1>AIの賢さより、<br /><em>外側の設計</em>で<br />決まる。</h1>
+            <p class="lead">
+              何を読ませるか。何を許すか。何をもって完成とするか。どこで止めるか。Claude
+              Code
+              を使った開発の成果は、モデルの外側にあるこの4つの設計で大きく変わります。要諦・設定方法・注意点・当社で実際に起きた事例の順にまとめました。
+            </p>
+            <nav class="toc" aria-label="目次">
+              <a href="#principles">要諦</a>
+              <a href="#setup">設定方法</a>
+              <a href="#pitfalls">注意点</a>
+              <a href="#cases">実施事例</a>
+            </nav>
+          </div>
+
+          <figure class="harness">
+            <svg
+              viewBox="0 0 480 480"
+              role="img"
+              aria-labelledby="hx-title hx-desc"
+            >
+              <title id="hx-title">モデルを囲む4つの層</title>
+              <desc id="hx-desc">
+                中心の小さな円がモデル。その外側を、内側から順に「読ませる」「許す」「確かめる」「止める」の4層が囲んでいる。
+              </desc>
+              <circle
+                class="ring-band b4"
+                cx="240"
+                cy="240"
+                r="228"
+                fill="var(--tint1)"
+                stroke="var(--verm)"
+                stroke-width="2.5"
+                stroke-dasharray="10 7"
+              />
+              <circle
+                class="ring-band b3"
+                cx="240"
+                cy="240"
+                r="174"
+                fill="var(--tint2)"
+                stroke="var(--blue)"
+                stroke-width="1.5"
+              />
+              <circle
+                class="ring-band b2"
+                cx="240"
+                cy="240"
+                r="122"
+                fill="var(--tint3)"
+                stroke="var(--blue)"
+                stroke-width="1.5"
+              />
+              <circle
+                class="ring-band b1"
+                cx="240"
+                cy="240"
+                r="74"
+                fill="var(--tint4)"
+                stroke="var(--blue)"
+                stroke-width="1.5"
+              />
+              <circle cx="240" cy="240" r="31" fill="var(--ink)" />
+              <text class="core-label" x="240" y="245.5" text-anchor="middle">
+                モデル
+              </text>
+              <text class="ring-label" x="240" y="195" text-anchor="middle">
+                読ませる
+              </text>
+              <text class="ring-label" x="240" y="146" text-anchor="middle">
+                許す
+              </text>
+              <text class="ring-label" x="240" y="95" text-anchor="middle">
+                確かめる
+              </text>
+              <text class="ring-label" x="240" y="41" text-anchor="middle">
+                止める
+              </text>
+            </svg>
+            <figcaption>
+              <dl class="legend">
+                <dt class="layer" data-layer="1">
+                  <svg class="mini" aria-hidden="true"><use href="#mini" /></svg
+                  >読ませる
+                </dt>
+                <dd>何を読ませるか（コンテキスト）</dd>
+                <dt class="layer" data-layer="2">
+                  <svg class="mini" aria-hidden="true"><use href="#mini" /></svg
+                  >許す
+                </dt>
+                <dd>何を許すか（権限・役割）</dd>
+                <dt class="layer" data-layer="3">
+                  <svg class="mini" aria-hidden="true"><use href="#mini" /></svg
+                  >確かめる
+                </dt>
+                <dd>何をもって完成とするか（検証）</dd>
+                <dt class="layer" data-layer="4">
+                  <svg class="mini" aria-hidden="true"><use href="#mini" /></svg
+                  >止める
+                </dt>
+                <dd>どこで止めるか（停止条件・人間の承認）</dd>
+              </dl>
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section id="principles" class="section">
+        <div class="wrap">
+          <header class="section-head">
+            <p class="eyebrow">何を大事にするか</p>
+            <h2>要諦</h2>
+            <p class="section-lead">
+              7つの原則です。それぞれに、4つの層のどこを設計する話なのかを付けています。
+            </p>
+          </header>
+          <div class="principles">
+            <article class="principle">
+              <div class="tags">
+                <span class="layer" data-layer="3"
+                  ><svg class="mini" aria-hidden="true">
+                    <use href="#mini" /></svg
+                  >確かめる</span
+                >
+              </div>
+              <h3>仕様が先、実装は後</h3>
+              <p>
+                Plan モードで調べてから SPEC を書きます。成功基準は「<code
+                  >npm test</code
+                >
+                が通る」のように、確かめられる形で書きます。そのあと
+                <code>/clear</code>
+                してから実装に入ります。複数ファイルにまたがる変更は、必ずこの2段階に分けます。
+              </p>
+            </article>
+            <article class="principle">
+              <div class="tags">
+                <span class="layer" data-layer="1"
+                  ><svg class="mini" aria-hidden="true">
+                    <use href="#mini" /></svg
+                  >読ませる</span
+                >
+              </div>
+              <h3>コンテキストは足すより絞る</h3>
+              <p>
+                毎回読ませる指示は最小限にし、詳しいルールは関係する作業のときだけ読ませます。読ませすぎると、判断の基準がぼやけます。
+              </p>
+            </article>
+            <article class="principle">
+              <div class="tags">
+                <span class="layer" data-layer="3"
+                  ><svg class="mini" aria-hidden="true">
+                    <use href="#mini" /></svg
+                  >確かめる</span
+                >
+              </div>
+              <h3>検証できて初めて完成</h3>
+              <p>
+                書き上がっただけでは未完成です。実行したうえで、ツールの「成功」表示ではなく、実ファイル・受信側・画面などの別の経路で確かめて、初めて完成とします。
+              </p>
+            </article>
+            <article class="principle">
+              <div class="tags">
+                <span class="layer" data-layer="2"
+                  ><svg class="mini" aria-hidden="true">
+                    <use href="#mini" /></svg
+                  >許す</span
+                >
+              </div>
+              <h3>守りは何重にも。文章のルールは破られる前提</h3>
+              <p>
+                権限設定（禁止）、フック（機械チェック）、人間の承認の3段で守ります。同じ違反が再発したら、文章のルールをフックに置き換えます。
+              </p>
+            </article>
+            <article class="principle">
+              <div class="tags">
+                <span class="layer" data-layer="2"
+                  ><svg class="mini" aria-hidden="true">
+                    <use href="#mini" /></svg
+                  >許す</span
+                >
+              </div>
+              <h3>役割を分ける</h3>
+              <p>
+                設計・判断する役、実装する役、軽作業の役に分け、役割ごとに使える道具とモデルを決めます。書いた本人にレビューさせません。
+              </p>
+            </article>
+            <article class="principle">
+              <div class="tags">
+                <span class="layer" data-layer="4"
+                  ><svg class="mini" aria-hidden="true">
+                    <use href="#mini" /></svg
+                  >止める</span
+                >
+              </div>
+              <h3>失敗したら上塗りせず巻き戻す</h3>
+              <p>
+                失敗の記録が残ったまま続けると、精度が落ちます。巻き戻すか、同じ失敗が2回続いたら
+                <code>/clear</code>
+                して、学んだことだけを持ち込んでやり直します。
+              </p>
+            </article>
+            <article class="principle">
+              <div class="tags">
+                <span class="layer" data-layer="1"
+                  ><svg class="mini" aria-hidden="true">
+                    <use href="#mini" /></svg
+                  >読ませる</span
+                >
+                <span class="layer" data-layer="4"
+                  ><svg class="mini" aria-hidden="true">
+                    <use href="#mini" /></svg
+                  >止める</span
+                >
+              </div>
+              <h3>繰り返す作業は型にする</h3>
+              <p>
+                同じ作業を3回したら、スキルにします。作るときに「何をもって役立ったとするか」と「いつ捨てるか」も書いておきます。
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="setup" class="section alt">
+        <div class="wrap">
+          <header class="section-head">
+            <p class="eyebrow">どう設定するか</p>
+            <h2>設定方法（最小構成）</h2>
+            <p class="section-lead">
+              上から順に整えていけば、最小限の守りと型がそろいます。
+            </p>
+          </header>
+          <ol class="steps">
+            <li class="step">
+              <div class="step-no">Step<span>0</span></div>
+              <div class="step-body">
+                <h3>起動するフォルダで作業範囲を区切る</h3>
+                <figure class="code">
+                  <figcaption>ターミナル</figcaption>
+                  <pre><code>cd ~/projects/&lt;案件名&gt;
+claude</code></pre>
+                </figure>
+                <p>
+                  Claude Code
+                  が読み書きできる範囲は、起動したフォルダが基準になります。Windows
+                  ネイティブ環境ではサンドボックス機能が使えないため（2026年10月時点）、案件ごとにそのフォルダへ移動してから起動することが、事実上の隔離になります。
+                </p>
+              </div>
+            </li>
+
+            <li class="step">
+              <div class="step-no">Step<span>1</span></div>
+              <div class="step-body">
+                <h3>CLAUDE.md にプロジェクトの基本ルールを書く</h3>
+                <figure class="code">
+                  <figcaption>CLAUDE.md</figcaption>
+                  <pre><code># プロジェクト概要
+- 作るもの: ○○受付Webツール（Node.js + Express）
+- 起動: `npm run dev` / テスト: `npm test`
+
+# 作業ルール
+- 3ファイル以上の変更は Plan モードで計画を出してから着手
+- 完了報告の前に `npm test` を実行し、結果の数値を貼る
+- 依存の追加・DBスキーマ変更は事前に確認を取る
+
+# 禁止
+- `.env` を読まない・書かない
+- main へ直接 push しない</code></pre>
+                </figure>
+                <p>
+                  書くのは「コードを読んでも分からないこと」だけです。長くなったら
+                  <code>.claude/rules/</code> に分け、<code>paths:</code>
+                  を指定して、関係するファイルを編集するときだけ読み込ませます（事例6）。
+                </p>
+                <figure class="code">
+                  <figcaption>.claude/rules/api.md</figcaption>
+                  <pre><code>---
+paths:
+  - "src/api/**"
+---
+# API の書き方
+- エラーは { code, message } の形で返す
+- 新しいエンドポイントには必ずテストを付ける</code></pre>
+                </figure>
+              </div>
+            </li>
+
+            <li class="step">
+              <div class="step-no">Step<span>2</span></div>
+              <div class="step-body">
+                <h3>権限を「禁止・確認・許可」に分ける</h3>
+                <figure class="code">
+                  <figcaption>.claude/settings.json</figcaption>
+                  <pre><code>{
+  "permissions": {
+    "deny":  ["Bash(rm -rf *)", "Bash(git push --force*)", "Bash(git reset --hard*)",
+              "Read(//**/.env)", "Edit(//**/.env)"],
+    "ask":   ["Bash(git push*)", "Bash(npm install *)"],
+    "allow": ["Bash(npm test*)", "Bash(git status *)", "Bash(git diff *)"]
+  }
+}</code></pre>
+                </figure>
+                <p>
+                  書き込み禁止は <code>Edit(パス)</code> の形で書きます。これで
+                  Write や NotebookEdit も一緒に止まります。<code
+                    >Write(パス)</code
+                  >
+                  の形は効かないので注意してください（事例2）。
+                </p>
+              </div>
+            </li>
+
+            <li class="step">
+              <div class="step-no">Step<span>3</span></div>
+              <div class="step-body">
+                <h3>フックで機械的にチェックする</h3>
+                <figure class="code">
+                  <figcaption>.claude/settings.json（hooks 部分）</figcaption>
+                  <pre><code>{
+  "hooks": {
+    "PreToolUse": [
+      { "matcher": "Bash",
+        "hooks": [{ "type": "command", "command": "bash .claude/hooks/block_dangerous.sh" }] },
+      { "matcher": "Write|Edit",
+        "hooks": [{ "type": "command", "command": "bash .claude/hooks/secret_scanner.sh" }] }
+    ],
+    "Stop": [
+      { "hooks": [{ "type": "command", "command": "bash .claude/hooks/done_gate.sh", "timeout": 20 }] }
+    ]
+  }
+}</code></pre>
+                </figure>
+                <figure class="code">
+                  <figcaption>.claude/hooks/block_dangerous.sh</figcaption>
+                  <pre><code>#!/usr/bin/env bash
+<span class="c"># PreToolUse(Bash): 危険コマンドを止める</span>
+<span class="c"># 入力は標準入力の JSON（jq が無い環境は node で解析）</span>
+CMD=$(jq -r '.tool_input.command // empty')
+if printf '%s' "$CMD" | grep -qE 'rm -rf /|git push --force'; then
+  echo "危険コマンドのため停止: $CMD" &gt;&amp;2
+  exit 2
+fi
+exit 0</code></pre>
+                </figure>
+                <ul class="notes">
+                  <li>フックへの入力は、標準入力の JSON で届きます。</li>
+                  <li>
+                    <code>exit 2</code> で止めると、エラー出力の内容が Claude
+                    に返ります。
+                  </li>
+                  <li>
+                    Stop フックは
+                    <code>stop_hook_active</code> を見て、無限ループを防ぎます。
+                  </li>
+                  <li>
+                    想定外のエラーでは
+                    <code>exit 0</code> にして、作業そのものは止めません。
+                  </li>
+                  <li>
+                    作ったら、わざと引っかかるコマンドで本当に作動するかを試します（事例3）。
+                  </li>
+                </ul>
+              </div>
+            </li>
+
+            <li class="step">
+              <div class="step-no">Step<span>4</span></div>
+              <div class="step-body">
+                <h3>サブエージェントで役割を分ける</h3>
+                <figure class="code">
+                  <figcaption>.claude/agents/reviewer.md</figcaption>
+                  <pre><code>---
+name: reviewer
+description: 実装完了後のレビュー専用。差分を読み、重大度付きで指摘だけ返す（修正はしない）
+tools: Read, Grep, Glob
+model: sonnet
+---
+git diff の範囲だけを読み、「重大／中／軽微」に分けて、
+該当ファイル:行と理由を返してください。</code></pre>
+                </figure>
+                <p>
+                  <code>model</code>
+                  は必ず書きます。書かないと、メインの高いモデルで動きます。<code
+                    >tools</code
+                  >
+                  を読み取り系に絞れば、レビュー役が勝手にコードを直すことはありません。
+                </p>
+              </div>
+            </li>
+
+            <li class="step">
+              <div class="step-no">Step<span>5</span></div>
+              <div class="step-body">
+                <h3>繰り返す作業をスキルにする</h3>
+                <figure class="code">
+                  <figcaption>.claude/skills/release-check/SKILL.md</figcaption>
+                  <pre><code>---
+name: release-check
+description: リリース前チェック。「リリース前確認」「デプロイ前チェック」で起動
+---
+## DO
+1. `npm test` と `npm run lint` を実行し、件数を記録
+2. CHANGELOG に今回の変更が載っているか確認
+## DON'T
+- push・デプロイはしない（報告まで）
+## OUTPUT FORMAT
+| 項目 | 結果 | 根拠（コマンド出力の要約） |</code></pre>
+                </figure>
+                <p>
+                  「やること」「やらないこと」「出力の形」の3つに分けて書くと、毎回同じ品質で返ってきます。
+                </p>
+              </div>
+            </li>
+
+            <li class="step">
+              <div class="step-no">Step<span>6</span></div>
+              <div class="step-body">
+                <h3>日々の操作を覚える</h3>
+                <dl class="ops">
+                  <div class="op">
+                    <dt>計画から始める</dt>
+                    <dd>Shift+Tab で Plan モードに切り替える</dd>
+                  </div>
+                  <div class="op">
+                    <dt>別のタスクに移る</dt>
+                    <dd><code>/clear</code></dd>
+                  </div>
+                  <div class="op">
+                    <dt>会話が長くなってきた</dt>
+                    <dd>
+                      <code>/compact 次にやること</code
+                      >（早めに、次の作業を添えて）
+                    </dd>
+                  </div>
+                  <div class="op">
+                    <dt>やり方が失敗した</dt>
+                    <dd>Esc を2回押して巻き戻す</dd>
+                  </div>
+                  <div class="op">
+                    <dt>本筋と関係ない質問</dt>
+                    <dd><code>/btw 質問</code>（会話の記録に残らない）</dd>
+                  </div>
+                  <div class="op">
+                    <dt>最後まで走らせたい</dt>
+                    <dd>
+                      <code>/goal 検証条件</code
+                      >（条件を満たすまで作業を続ける）
+                    </dd>
+                  </div>
+                  <div class="op">
+                    <dt>複数の機能を並行で開発</dt>
+                    <dd>
+                      <code>claude -w 名前</code>（git worktree
+                      で作業場所を分ける）
+                    </dd>
+                  </div>
+                  <div class="op">
+                    <dt>コストを確かめる</dt>
+                    <dd><code>/usage</code></dd>
+                  </div>
+                </dl>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section id="pitfalls" class="section">
+        <div class="wrap">
+          <header class="section-head">
+            <p class="eyebrow">どこでつまずくか</p>
+            <h2>注意点</h2>
+          </header>
+          <ul class="pitfalls">
+            <li>
+              <strong
+                >設定は「書いた」ではなく「効いている」かを確かめる</strong
+              >
+              <p>
+                設定の優先順位の仕組みやバージョン変更で、意図と逆に効くことがあります（事例1〜3）。
+              </p>
+            </li>
+            <li>
+              <strong>権限ルールは、省略された項目には効かない</strong>
+              <p>
+                たとえば <code>Agent(model:*)</code> と書いても、model
+                を指定しない委譲は止められません。ルールで止められないものは、運用ルールと定期チェックで補います。
+              </p>
+            </li>
+            <li>
+              <strong>自動承認モードは、速さと安全の引き換え</strong>
+              <p>
+                使うなら、取り返しのつかない操作を deny と ask
+                で先に固めておきます。末尾の一部だけで判定するような広すぎる許可ルールは作りません。
+              </p>
+            </li>
+            <li>
+              <strong
+                >公開・送信・削除・上書きは、最初から全自動にしない</strong
+              >
+              <p>この4つだけは、人間の承認を残します。</p>
+            </li>
+            <li>
+              <strong>サブエージェントの結果は自動で反映しない</strong>
+              <p>レビューの指摘も、人が一度見て採否を決めます。</p>
+            </li>
+            <li>
+              <strong>会話が長いほど精度が落ちる</strong>
+              <p>
+                劣化が始まる量はタスクによって違います。余裕のあるうちに
+                <code>/compact</code> します。
+              </p>
+            </li>
+            <li>
+              <strong>model を指定しない委譲はコストが高くなる</strong>
+              <p>
+                指定がないとメインモデルの単価で動きます。内訳は
+                <code>/usage</code> で確認できます。
+              </p>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="cases" class="section alt">
+        <div class="wrap">
+          <header class="section-head">
+            <p class="eyebrow">実際に何が起きたか</p>
+            <h2>実施事例</h2>
+            <p class="section-lead">
+              コミクス社内の Claude Code
+              運用で、実際に起きたことです。いずれも現在は修正・運用済みです。
+            </p>
+          </header>
+          <div class="cases">
+            <article class="case">
+              <div class="tags">
+                <span class="layer" data-layer="3"
+                  ><svg class="mini" aria-hidden="true">
+                    <use href="#mini" /></svg
+                  >確かめる</span
+                >
+              </div>
+              <h3>設定がモデル指定を丸ごと上書きしていた</h3>
+              <dl>
+                <dt>何があったか</dt>
+                <dd>
+                  サブエージェントのモデルを環境変数
+                  <code>CLAUDE_CODE_SUBAGENT_MODEL</code>
+                  で指定したところ、各エージェント定義に書いた model
+                  指定がすべて上書きされていました。撤去するまで、上位の役割も軽作業の役割も同じモデルで動いていました（その後のバージョンで、未指定時の既定値として働く仕様に変わりました）。
+                </dd>
+                <dt>学び</dt>
+                <dd class="learn">
+                  設定は意図と逆に効くことがある。実際に動いたモデルをログに残し、定期的に集計して確かめる。
+                </dd>
+              </dl>
+            </article>
+            <article class="case">
+              <div class="tags">
+                <span class="layer" data-layer="2"
+                  ><svg class="mini" aria-hidden="true">
+                    <use href="#mini" /></svg
+                  >許す</span
+                >
+              </div>
+              <h3>書き込み禁止のつもりが効いていなかった</h3>
+              <dl>
+                <dt>何があったか</dt>
+                <dd>
+                  <code>.env</code> の書き込み禁止を
+                  <code>Write(パス)</code>
+                  の形で書いていたため、ルールが無効でした。遮断したつもりで、Write
+                  ツール経由の上書きは通る状態でした。
+                </dd>
+                <dt>学び</dt>
+                <dd class="learn">
+                  起動時の警告を読む。書き込み禁止は
+                  <code>Edit(パス)</code> の形で書く。
+                </dd>
+              </dl>
+            </article>
+            <article class="case">
+              <div class="tags">
+                <span class="layer" data-layer="2"
+                  ><svg class="mini" aria-hidden="true">
+                    <use href="#mini" /></svg
+                  >許す</span
+                >
+              </div>
+              <h3>守りのフックが一度も作動していなかった</h3>
+              <dl>
+                <dt>何があったか</dt>
+                <dd>
+                  危険コマンドを止めるフックが、入力の受け取り方が環境変数から標準入力の
+                  JSON
+                  に変わったことで、実際には作動していませんでした。権限設定の
+                  deny が別の段で止めていたため、被害はありませんでした。
+                </dd>
+                <dt>学び</dt>
+                <dd class="learn">
+                  守りの仕組みは、本当に作動するかテストする。一段だけに頼らない。
+                </dd>
+              </dl>
+            </article>
+            <article class="case">
+              <div class="tags">
+                <span class="layer" data-layer="4"
+                  ><svg class="mini" aria-hidden="true">
+                    <use href="#mini" /></svg
+                  >止める</span
+                >
+              </div>
+              <h3>ルールで禁止しても3回再発した</h3>
+              <dl>
+                <dt>何があったか</dt>
+                <dd>
+                  <code>python -c "…"</code>
+                  の中にバッククォートが混ざると、コマンドが途中で分断され、名前の壊れたファイルができます。ルール文書で禁止した後も、3回起きました。
+                </dd>
+                <dt>学び</dt>
+                <dd class="learn">
+                  文章のルールは守られない前提で考える。再発したら、フックで機械的に止める。
+                </dd>
+              </dl>
+            </article>
+            <article class="case">
+              <div class="tags">
+                <span class="layer" data-layer="3"
+                  ><svg class="mini" aria-hidden="true">
+                    <use href="#mini" /></svg
+                  >確かめる</span
+                >
+              </div>
+              <h3>「完成しました」を機械でチェックする</h3>
+              <dl>
+                <dt>何があったか</dt>
+                <dd>
+                  ツールの成功表示を信じて「完成」と報告したのに、成果物ができていない。そんな偽の成功報告が起きていました。そこで、完了報告に書いた成果物のパスが実在しなければ作業の終了をブロックする仕組みを入れました。誤作動を避けるため対象は成果物の保存フォルダだけに絞り、想定外のエラーでは止めず、強制は1回だけにしています。
+                </dd>
+                <dt>学び</dt>
+                <dd class="learn">
+                  完成の判定を人の目だけに頼らない。対象を狭くして、誤検知を減らす。
+                </dd>
+              </dl>
+            </article>
+            <article class="case">
+              <div class="tags">
+                <span class="layer" data-layer="1"
+                  ><svg class="mini" aria-hidden="true">
+                    <use href="#mini" /></svg
+                  >読ませる</span
+                >
+              </div>
+              <h3>毎回読ませるルールを約37%減らした</h3>
+              <dl>
+                <dt>何があったか</dt>
+                <dd>
+                  毎回読み込んでいたルールを、関係するファイルを編集するときだけ読み込む形（<code
+                    >paths:</code
+                  >
+                  指定）に切り替え、毎回の読み込み量を約37%減らしました。
+                </dd>
+                <dt>学び</dt>
+                <dd class="learn">
+                  毎回読ませる量は、思ったより絞れる。絞ったぶんコストが下がり、必要なルールが埋もれにくくなる。
+                </dd>
+              </dl>
+            </article>
+            <article class="case">
+              <div class="tags">
+                <span class="layer" data-layer="2"
+                  ><svg class="mini" aria-hidden="true">
+                    <use href="#mini" /></svg
+                  >許す</span
+                >
+              </div>
+              <h3>モデルを3層に分けた</h3>
+              <dl>
+                <dt>何があったか</dt>
+                <dd>
+                  設計・判断の司令塔、実作業、軽作業の3層にモデルを分け、最上位のモデルは条件を満たしたときだけ呼ぶ「切り札」にしました。委譲するときは
+                  model の明記を必須にしています。
+                </dd>
+                <dt>学び</dt>
+                <dd class="learn">
+                  役割分担はコストにも品質にも効く。ただし、運用ルールと定期監査をセットで回す。
+                </dd>
+              </dl>
+            </article>
+            <article class="case">
+              <div class="tags">
+                <span class="layer" data-layer="4"
+                  ><svg class="mini" aria-hidden="true">
+                    <use href="#mini" /></svg
+                  >止める</span
+                >
+              </div>
+              <h3>承認の依頼を3つに仕分けた</h3>
+              <dl>
+                <dt>何があったか</dt>
+                <dd>
+                  AIからの確認依頼が多すぎて、代表の判断が詰まりました。そこで「すぐ確認（取り返しがつかない・社外・お金）」「週1回まとめて裁定」「既定値で処理」の3つに分けました。
+                </dd>
+                <dt>学び</dt>
+                <dd class="learn">
+                  AI駆動開発のボトルネックは、人間の承認の手間。承認の仕組みも、開発の一部として設計する。
+                </dd>
+              </dl>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="colophon">
+      <div class="wrap">
+        <p class="sig">鈴木章裕<br />株式会社コミクス 代表取締役</p>
+        <p class="basis">
+          本書の事例は、コミクス社内の Claude Code
+          運用記録にもとづきます。設定やコマンドは2026年10月時点の仕様です。今後のバージョンで変わることがあります。
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
